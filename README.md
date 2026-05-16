@@ -16,10 +16,3 @@ ATS Pro is a modern Applicant Tracking System (ATS) web application designed to 
 - Database: MongoDB
 - Styling: CSS / Tailwind
 
-## Installation
-
-```bash
-git clone https://github.com/PatraShruti/ats-pro.git
-cd ats-pro
-npm install
-npm start
