@@ -1,4 +1,4 @@
-# 🚀 ATS Pro v2
+# ATS Pro 
 
 ATS Pro  is a powerful, AI-driven Applicant Tracking System that analyzes, scores, and compares resumes against job descriptions. It uses Anthropic's Claude AI to provide actionable feedback for candidates and deep comparative analytics for hiring managers.
 
