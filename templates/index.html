@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ATS Pro{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block navbar_actions %}
+<a href="/analyze" class="btn btn-primary" style="text-decoration:none;padding:10px 20px;font-size:14px;display:flex;align-items:center;gap:8px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Analyze Resume
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-grid-3 { grid-template-columns: repeat(3,1fr); }
+.upload-zone { border:2px dashed var(--glass-border);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--glass-bg);position:relative;margin-bottom:16px; }
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--emerald-light);background:rgba(52,211,153,0.05);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.candidate-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--glass-border);}
+.candidate-row:last-child{border-bottom:none;}
+.c-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--emerald),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.form-select{width:100%;padding:13px 16px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;color:var(--text-primary);font-family:inherit;font-size:14px;cursor:pointer;appearance:none;margin-top:6px;}
+.form-select:focus{outline:none;border-color:var(--emerald-light);}
+.form-select option{background:#0a0f0d;}
+.analyze-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border:none;border-radius:12px;color:white;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.3s;box-shadow:0 8px 24px rgba(5,150,105,0.3);margin-top:16px;}
+.analyze-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 36px rgba(5,150,105,0.4);}
+.analyze-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="stats-grid stat-grid-3" style="margin-bottom:28px;">
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Total Analyzed</h3><div class="stat-value" id="statTotal">—</div><span class="stat-change positive">All time</span></div>
+            <div class="stat-icon cyan"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald-light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Avg ATS Score</h3><div class="stat-value" id="statAvg">—</div><span class="stat-change positive">Mean score</span></div>
+            <div class="stat-icon magenta"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Excellent Fits</h3><div class="stat-value" id="statTop">—</div><span class="stat-change positive">Score ≥ 80%</span></div>
+            <div class="stat-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN GRID -->
+<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:24px;">
+    <!-- Quick Analyze Card -->
+    <div class="glass-card">
+        <div class="card-header">
+            <div><h2 class="card-title">Quick Analyze</h2><p class="card-subtitle">Upload & get instant AI feedback</p></div>
+            <a href="/analyze" style="font-size:13px;color:var(--emerald-light);">Full analyzer →</a>
+        </div>
+        <div class="upload-zone" id="dropZone">
+            <input type="file" id="resumeFile" accept=".pdf,.txt,.doc,.docx">
+            <div style="font-size:44px;margin-bottom:10px;">📄</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:5px;">Drop resume here or click to upload</div>
+            <div style="font-size:13px;color:var(--text-muted);">PDF, TXT, DOCX — max 10 MB</div>
+            <div id="fileName" style="color:var(--emerald-light);margin-top:10px;font-size:13px;font-weight:500;"></div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Target Role</label>
+            <select class="form-select" id="quickRole">
+                <option>Frontend Developer</option><option>Backend Developer</option>
+                <option>Full Stack Developer</option><option>Data Scientist</option>
+                <option>ML Engineer</option><option>DevOps Engineer</option>
+                <option>Product Manager</option><option>UI/UX Designer</option>
+            </select>
+        </div>
+        <button class="analyze-btn" id="quickBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Analyze with AI
+        </button>
+
+        <!-- Quick Result -->
+        <div id="quickResult" style="display:none;margin-top:24px;border-top:1px solid var(--glass-border);padding-top:20px;">
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;">
+                        <svg width="110" height="110" viewBox="0 0 110 110" style="position:absolute;top:0;left:0;transform:rotate(-90deg)">
+                            <circle cx="55" cy="55" r="44" fill="none" stroke="var(--glass-border)" stroke-width="9"/>
+                            <circle cx="55" cy="55" r="44" fill="none" stroke="var(--emerald)" stroke-width="9"
+                                stroke-dasharray="277" stroke-dashoffset="277" id="qArc" stroke-linecap="round"/>
+                        </svg>
+                        <span id="qScore" style="font-family:'Space Mono';font-size:22px;font-weight:700;z-index:1;">0%</span>
+                    </div>
+                    <div id="qGrade" style="margin-top:6px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;"></div>
+                </div>
+                <div style="flex:1;min-width:180px;">
+                    <p id="qSummary" style="font-size:13px;line-height:1.7;color:var(--text-secondary);"></p>
+                    <div style="margin-top:10px;"><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:600;">Companies</span><div id="qCompanies" style="margin-top:6px;"></div></div>
+                </div>
+            </div>
+            <a href="/candidates" style="display:block;text-align:center;margin-top:14px;padding:10px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:10px;color:var(--emerald-light);font-size:13px;text-decoration:none;">View all candidates →</a>
+        </div>
+    </div>
+
+    <!-- Recent Candidates -->
+    <div class="glass-card">
+        <div class="card-header">
+            <div><h2 class="card-title">Recent Candidates</h2><p class="card-subtitle">Latest analyzed resumes</p></div>
+            <a href="/candidates" style="font-size:13px;color:var(--emerald-light);">View all →</a>
+        </div>
+        <div id="recentList">
+            <div style="text-align:center;padding:50px 20px;color:var(--text-muted);">
+                <div style="font-size:40px;margin-bottom:10px;">📭</div>
+                <p>No candidates yet.<br>Upload a resume to get started.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Drop zone
+const dropZone = document.getElementById('dropZone');
+const resumeFile = document.getElementById('resumeFile');
+resumeFile.addEventListener('change', e => { if(e.target.files[0]) document.getElementById('fileName').textContent = '✓ ' + e.target.files[0].name; });
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');if(e.dataTransfer.files[0]){resumeFile.files=e.dataTransfer.files;document.getElementById('fileName').textContent='✓ '+e.dataTransfer.files[0].name;}});
+
+// Load dashboard stats
+async function loadDashboard() {
+    try {
+        const data = await api.get('/api/dashboard');
+        document.getElementById('statTotal').textContent = data.total;
+        document.getElementById('statAvg').textContent = (data.avg_score || 0) + '%';
+        document.getElementById('statTop').textContent = data.excellent;
+
+        const list = document.getElementById('recentList');
+        if (!data.recent_candidates.length) return;
+        list.innerHTML = data.recent_candidates.map(c => `
+            <div class="candidate-row">
+                <div class="c-avatar">${c.name[0]}</div>
+                <div style="flex:1">
+                    <div style="font-weight:500;font-size:14px;">${c.name}</div>
+                    <div style="font-size:12px;color:var(--text-muted);">${c.role}</div>
+                </div>
+                <span class="score-pill ${scoreClass(c.ats_score)}">${c.ats_score}%</span>
+            </div>`).join('');
+    } catch(e) { console.error('Dashboard load error:', e); }
+}
+loadDashboard();
+
+// Quick analyze
+document.getElementById('quickBtn').addEventListener('click', async function() {
+    const file = resumeFile.files[0];
+    if (!file) { toast('Please upload a resume file first.', 'error'); return; }
+    this.disabled = true;
+    this.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Analyzing...`;
+
+    const fd = new FormData();
+    fd.append('resume', file);
+    fd.append('role', document.getElementById('quickRole').value);
+    fd.append('experience_level', 'Mid Level (2-5 years)');
+
+    try {
+        const data = await api.postForm('/api/analyze', fd);
+        const c = data.candidate;
+        document.getElementById('quickResult').style.display = 'block';
+
+        // Arc
+        const arc = document.getElementById('qArc');
+        arc.style.stroke = c.score>=80?'#22c55e':c.score>=50?'#eab308':'#ef4444';
+        document.getElementById('qScore').textContent = c.score+'%';
+        setTimeout(()=>{arc.style.transition='stroke-dashoffset 1.2s ease';arc.style.strokeDashoffset=277-(c.score/100)*277;},100);
+
+        const g = document.getElementById('qGrade');
+        g.textContent = c.grade;
+        g.style.background = c.score>=80?'rgba(34,197,94,0.15)':c.score>=50?'rgba(234,179,8,0.15)':'rgba(239,68,68,0.15)';
+        g.style.color = c.score>=80?'#22c55e':c.score>=50?'#eab308':'#ef4444';
+
+        document.getElementById('qSummary').textContent = c.summary || '';
+        document.getElementById('qCompanies').innerHTML = (c.eligible_companies||[]).slice(0,3).map(co=>
+            `<span style="display:inline-block;background:rgba(212,165,116,0.1);border:1px solid rgba(212,165,116,0.3);color:var(--gold-light);padding:3px 10px;border-radius:8px;font-size:12px;margin:2px;">${co.name||co}</span>`
+        ).join('');
+
+        document.getElementById('quickResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+        toast('Analysis complete!', 'success');
+        loadDashboard();
+    } catch(err) {
+        toast('Analysis failed: ' + err.message, 'error');
+    }
+    this.disabled = false;
+    this.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analyze with AI`;
+});
+</script>
+{% endblock %}

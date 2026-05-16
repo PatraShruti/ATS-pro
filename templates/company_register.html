@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Company — ATS Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/glass-admin.css">
+</head>
+<body>
+<div class="background"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+
+<div class="login-page">
+    <button class="theme-toggle-float" id="theme-toggle">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+
+    <div class="login-container" style="max-width:480px;">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo" style="background:linear-gradient(135deg,var(--amber),var(--gold));">🏢</div>
+                <h1 class="login-title">Register Your Company</h1>
+                <p class="login-subtitle">Start AI-powered hiring today</p>
+            </div>
+            <div id="err" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:11px 15px;margin-bottom:14px;font-size:13px;color:#f87171;text-align:center;"></div>
+            <form id="rf">
+                <div class="form-group"><label class="form-label">Your Name *</label><input type="text" id="name" class="form-input" placeholder="Jane Smith" required></div>
+                <div class="form-group"><label class="form-label">Company Name *</label><input type="text" id="company" class="form-input" placeholder="Acme Corp" required></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group"><label class="form-label">Email *</label><input type="email" id="email" class="form-input" placeholder="hr@company.com" required></div>
+                    <div class="form-group"><label class="form-label">Industry</label><input type="text" id="industry" class="form-input" placeholder="Technology"></div>
+                </div>
+                <div class="form-group"><label class="form-label">Password * <span style="font-size:11px;color:var(--text-muted);">(min 6 chars)</span></label><input type="password" id="password" class="form-input" placeholder="Create a strong password" required></div>
+                <div class="form-row" style="margin-bottom:20px;"><label class="checkbox-label"><input type="checkbox" required>I agree to the <a href="#" style="color:var(--gold-light);">Terms</a></label></div>
+                <button type="submit" class="btn btn-primary" id="sb" style="background:linear-gradient(135deg,var(--amber),var(--gold));color:#000;">
+                    Create Company Account <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </form>
+            <p class="login-footer" style="margin-top:18px;">Already registered? <a href="/company/login" style="color:var(--gold-light);">Sign In</a></p>
+            <p class="login-footer" style="margin-top:8px;"><a href="/check" style="color:var(--emerald-light);">← Check my resume (no account)</a></p>
+        </div>
+    </div>
+    <footer class="site-footer" style="margin-left:0;">© 2026 ATS Pro</footer>
+</div>
+
+<script src="/static/js/glass-admin-script.js"></script>
+<script>
+if(localStorage.getItem('ats_company_token')) window.location.href='/company';
+document.getElementById('rf').addEventListener('submit',async function(e){
+    e.preventDefault();
+    const btn=document.getElementById('sb'),err=document.getElementById('err');
+    btn.disabled=true;btn.textContent='Creating account...';err.style.display='none';
+    try{
+        const res=await fetch('/api/company/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('name').value,company:document.getElementById('company').value,email:document.getElementById('email').value,industry:document.getElementById('industry').value,password:document.getElementById('password').value})});
+        const d=await res.json();
+        if(!res.ok)throw new Error(d.error||'Registration failed');
+        localStorage.setItem('ats_company_token',d.token);
+        localStorage.setItem('ats_company',JSON.stringify(d.company));
+        window.location.href='/company';
+    }catch(ex){err.textContent=ex.message;err.style.display='block';btn.disabled=false;btn.innerHTML='Create Company Account <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';}
+});
+</script>
+</body>
+</html>

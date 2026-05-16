@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Job Roles — ATS Pro{% endblock %}
+{% block nav_jobs %}active{% endblock %}
+{% block page_title %}Job Roles{% endblock %}
+
+{% block navbar_actions %}
+<button class="btn btn-primary" onclick="openModal()" style="font-size:14px;padding:10px 20px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Role
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.jobs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.job-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:15px;padding:20px;transition:all .3s;}
+.job-card:hover{background:var(--glass-hover);border-color:rgba(52,211,153,0.35);transform:translateY(-2px);}
+.skill-chip{display:inline-block;padding:3px 9px;border-radius:9px;font-size:11px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);color:var(--emerald-light);margin:2px;}
+.add-tile{background:var(--glass-bg);border:2px dashed var(--glass-border);border-radius:15px;padding:20px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;color:var(--text-muted);font-size:14px;gap:8px;}
+.add-tile:hover{border-color:var(--emerald-light);color:var(--emerald-light);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#0d1a14;border:1px solid var(--glass-border);border-radius:18px;max-width:480px;width:100%;padding:28px;position:relative;}
+.f-input{width:100%;padding:12px 15px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:14px;margin-bottom:12px;}
+.f-input::placeholder{color:var(--text-muted);}
+.f-input:focus{outline:none;border-color:var(--emerald-light);}
+.system-badge{font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);color:#60a5fa;font-weight:500;}
+</style>
+{% endblock %}
+
+{% block content %}
+<p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Manage roles and required skill sets. System roles are defaults — add your own custom roles below.</p>
+
+<div class="jobs-grid" id="jobsGrid">
+    <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+    <div class="modal">
+        <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+        <h2 style="margin-bottom:20px;font-size:18px;">Add Job Role</h2>
+        <div style="display:flex;gap:10px;">
+            <input class="f-input" id="newEmoji" placeholder="Emoji" maxlength="4" style="width:70px;flex-shrink:0;">
+            <input class="f-input" id="newTitle" placeholder="Role Title *" style="flex:1;margin-left:0;">
+        </div>
+        <input class="f-input" id="newDept" placeholder="Department (e.g. Engineering)">
+        <textarea class="f-input" id="newSkills" placeholder="Required skills (comma-separated)&#10;e.g. React, TypeScript, Docker, AWS" style="min-height:80px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="saveRole()" style="flex:1;">Save Role</button>
+            <button onclick="closeModal()" style="flex:1;padding:14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-secondary);font-family:inherit;cursor:pointer;font-size:14px;">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadJobs(){
+    try {
+        const data = await api.get('/api/jobs');
+        renderJobs(data.jobs);
+    } catch(e){ document.getElementById('jobsGrid').innerHTML=`<p style="color:var(--text-muted);">Error loading jobs.</p>`; }
+}
+
+function renderJobs(jobs){
+    const grid = document.getElementById('jobsGrid');
+    grid.innerHTML = jobs.map(j => {
+        const isSystem = j.user_id === 'system';
+        const avgStr = j.avg_score ? Math.round(j.avg_score)+'%' : 'N/A';
+        return `<div class="job-card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+                <div>
+                    <span style="font-size:32px;display:block;margin-bottom:6px;">${j.emoji}</span>
+                    <div style="font-size:15px;font-weight:600;">${j.title}</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${j.department}</div>
+                </div>
+                ${isSystem ? '<span class="system-badge">System</span>' : `<button onclick="deleteJob('${j.id}')" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#f87171;padding:4px 9px;border-radius:7px;font-size:11px;cursor:pointer;">✕</button>`}
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:10px;">
+                <div style="font-size:12px;color:var(--text-secondary);">Candidates: <strong style="color:var(--emerald-light);font-family:'Space Mono';">${j.candidate_count}</strong></div>
+                <div style="font-size:12px;color:var(--text-secondary);">Avg Score: <strong style="color:var(--emerald-light);font-family:'Space Mono';">${avgStr}</strong></div>
+            </div>
+            <div>${(j.required_skills||[]).slice(0,5).map(s=>`<span class="skill-chip">${s}</span>`).join('')}${(j.required_skills||[]).length>5?`<span class="skill-chip">+${j.required_skills.length-5}</span>`:''}</div>
+            <a href="/candidates" style="display:block;text-align:center;margin-top:12px;padding:8px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);border-radius:9px;color:var(--emerald-light);font-size:12px;text-decoration:none;">View Candidates →</a>
+        </div>`;
+    }).join('') + `<div class="add-tile" onclick="openModal()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add New Role
+    </div>`;
+}
+
+function openModal(){ document.getElementById('modalOverlay').style.display='flex'; }
+function closeModal(){ document.getElementById('modalOverlay').style.display='none'; }
+
+async function saveRole(){
+    const title = document.getElementById('newTitle').value.trim();
+    if(!title){ toast('Role title is required.','error'); return; }
+    const skills = document.getElementById('newSkills').value.split(',').map(s=>s.trim()).filter(Boolean);
+    try {
+        await api.post('/api/jobs',{
+            emoji: document.getElementById('newEmoji').value.trim()||'💼',
+            title,
+            department: document.getElementById('newDept').value.trim()||'General',
+            required_skills: skills
+        });
+        closeModal();
+        toast('Role added!','success');
+        loadJobs();
+    } catch(e){ toast('Failed: '+e.message,'error'); }
+}
+
+async function deleteJob(id){
+    if(!confirm('Delete this job role?')) return;
+    try {
+        await api.delete(`/api/jobs/${id}`);
+        toast('Role deleted.','success');
+        loadJobs();
+    } catch(e){ toast('Cannot delete: '+e.message,'error'); }
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+loadJobs();
+</script>
+{% endblock %}

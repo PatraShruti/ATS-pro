@@ -1,0 +1,98 @@
+{% extends "company_base.html" %}
+{% block title %}Dashboard — ATS Pro{% endblock %}
+{% block n_dash %}active{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block nav_actions %}
+<a href="/company/analyze" class="btn btn-primary" style="text-decoration:none;padding:10px 20px;font-size:14px;display:flex;align-items:center;gap:8px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Analyze Resume
+</a>{% endblock %}
+{% block extra_css %}<style>
+.s4{grid-template-columns:repeat(4,1fr);}
+.hire-badge{display:inline-block;padding:3px 10px;border-radius:9px;font-size:12px;font-weight:600;}
+.hire-sh{background:rgba(34,197,94,.15);color:#22c55e;}
+.hire-hi{background:rgba(52,211,153,.12);color:var(--emerald-light);}
+.hire-mb{background:rgba(234,179,8,.12);color:#eab308;}
+.hire-rj{background:rgba(239,68,68,.12);color:#f87171;}
+.hire-pd{background:rgba(148,163,184,.12);color:#94a3b8;}
+.c-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--glass-border);}
+.c-row:last-child{border-bottom:none;}
+.c-av{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--emerald),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.qa{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px;text-align:center;text-decoration:none;color:inherit;transition:all .25s;display:block;}
+.qa:hover{background:var(--glass-hover);transform:translateY(-2px);}
+.qa .qi{font-size:28px;margin-bottom:8px;}
+.qa .qt{font-size:13px;font-weight:600;}
+.qa .qs{font-size:12px;color:var(--text-muted);margin-top:2px;}
+</style>{% endblock %}
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid s4" style="margin-bottom:24px;">
+    <div class="glass-card glass-card-3d stat-card"><div class="stat-card-inner"><div class="stat-info"><h3>Total Screened</h3><div class="stat-value" id="st">—</div><span class="stat-change positive">All time</span></div><div class="stat-icon cyan"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald-light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div></div></div>
+    <div class="glass-card glass-card-3d stat-card"><div class="stat-card-inner"><div class="stat-info"><h3>Avg ATS Score</h3><div class="stat-value" id="sa">—</div><span class="stat-change positive">Mean</span></div><div class="stat-icon magenta"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div></div>
+    <div class="glass-card glass-card-3d stat-card"><div class="stat-card-inner"><div class="stat-info"><h3>Ready to Hire</h3><div class="stat-value" id="sh">—</div><span class="stat-change positive">Strong/Hire</span></div><div class="stat-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div></div>
+    <div class="glass-card glass-card-3d stat-card"><div class="stat-card-inner"><div class="stat-info"><h3>Excellent Fits</h3><div class="stat-value" id="se">—</div><span class="stat-change positive">Score ≥ 80%</span></div><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div></div></div>
+</div>
+
+<!-- Quick actions -->
+<div class="quick-actions">
+    <a href="/company/analyze" class="qa"><div class="qi">📄</div><div class="qt">Analyze Resume</div><div class="qs">Upload & AI-score a new candidate</div></a>
+    <a href="/company/compare" class="qa"><div class="qi">⚖️</div><div class="qt">Compare Candidates</div><div class="qs">Side-by-side AI hiring decision</div></a>
+    <a href="/company/analytics" class="qa"><div class="qi">📊</div><div class="qt">View Analytics</div><div class="qs">Pipeline insights & charts</div></a>
+</div>
+
+<!-- Main grid -->
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;">
+    <div class="glass-card">
+        <div class="card-header"><div><h2 class="card-title">Recent Candidates</h2><p class="card-subtitle">Latest AI-analyzed resumes</p></div><a href="/company/candidates" style="font-size:13px;color:var(--emerald-light);">View all →</a></div>
+        <div id="recentList"><div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:36px;margin-bottom:8px;">📭</div><p>No candidates yet. <a href="/company/analyze" style="color:var(--emerald-light);">Analyze your first resume →</a></p></div></div>
+    </div>
+    <div>
+        <!-- Hire recommendation summary -->
+        <div class="glass-card" style="margin-bottom:18px;">
+            <div class="card-header"><div><h2 class="card-title">Hire Decisions</h2><p class="card-subtitle">AI recommendations breakdown</p></div></div>
+            <div id="hireChart" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+        <!-- Pipeline tip -->
+        <div class="glass-card" style="background:linear-gradient(135deg,rgba(52,211,153,.06),rgba(212,165,116,.06));border-color:rgba(52,211,153,.2);">
+            <div style="font-size:24px;margin-bottom:10px;">💡</div>
+            <div style="font-weight:600;font-size:15px;margin-bottom:6px;">Compare to decide faster</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:14px;">Select 2–5 candidates for the same role and let AI rank them and tell you exactly who to interview and who to pass.</div>
+            <a href="/company/compare" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border-radius:10px;font-size:13px;font-weight:600;color:#000;text-decoration:none;">Compare Candidates →</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function loadDash(){
+    try{
+        const d=await api.get('/api/company/dashboard');
+        document.getElementById('st').textContent=d.total;
+        document.getElementById('sa').textContent=(d.avg_score||0)+'%';
+        document.getElementById('sh').textContent=d.to_hire;
+        document.getElementById('se').textContent=d.excellent;
+        document.getElementById('cBadge').textContent=d.total;
+
+        const rl=document.getElementById('recentList');
+        if(d.recent&&d.recent.length){
+            rl.innerHTML=d.recent.map(c=>{
+                const hcls={'Strong Hire':'hire-sh','Hire':'hire-hi','Maybe':'hire-mb','Reject':'hire-rj','Pending':'hire-pd'}[c.hire_recommendation]||'hire-pd';
+                return `<div class="c-row"><div class="c-av">${c.name[0]}</div><div style="flex:1;"><div style="font-weight:500;font-size:14px;">${c.name}</div><div style="font-size:12px;color:var(--text-muted);">${c.role}</div></div><span class="hire-badge ${hcls}">${c.hire_recommendation||'Pending'}</span><span class="score-pill ${scoreClass(c.ats_score)}">${c.ats_score}%</span></div>`;
+            }).join('');
+        }
+    }catch(e){console.error(e);}
+
+    try{
+        const d=await api.get('/api/company/analytics');
+        const hd=d.hire_dist||{};
+        const total=Object.values(hd).reduce((a,b)=>a+b,0)||1;
+        const hcfg=[['Strong Hire','#22c55e'],['Hire','var(--emerald-light)'],['Maybe','#eab308'],['Reject','#f87171'],['Pending','#94a3b8']];
+        document.getElementById('hireChart').innerHTML=hcfg.map(([label,color])=>{
+            const count=hd[label]||0;
+            const pct=Math.round((count/total)*100);
+            return `<div style="display:flex;align-items:center;gap:10px;"><div style="font-size:13px;min-width:90px;color:var(--text-secondary);">${label}</div><div style="flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 1s ease;"></div></div><div style="font-family:'Space Mono';font-size:12px;font-weight:700;min-width:28px;text-align:right;">${count}</div></div>`;
+        }).join('');
+    }catch(e){}
+}
+loadDash();
+</script>{% endblock %}

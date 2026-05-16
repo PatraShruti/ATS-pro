@@ -1,0 +1,74 @@
+{% extends "company_base.html" %}
+{% block title %}Job Roles — ATS Pro{% endblock %}
+{% block n_jobs %}active{% endblock %}
+{% block page_title %}Job Roles{% endblock %}
+{% block nav_actions %}<button class="btn btn-primary" onclick="openModal()" style="font-size:14px;padding:10px 20px;display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Role</button>{% endblock %}
+{% block extra_css %}<style>
+.jg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.jc{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px;transition:all .3s;}
+.jc:hover{background:var(--glass-hover);border-color:rgba(52,211,153,.3);transform:translateY(-2px);}
+.sc{display:inline-block;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60a5fa;}
+.sk{display:inline-block;padding:3px 8px;border-radius:8px;font-size:11px;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.15);color:var(--emerald-light);margin:2px;}
+.add-tile{background:var(--glass-bg);border:2px dashed var(--glass-border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;color:var(--text-muted);font-size:13px;gap:7px;}
+.add-tile:hover{border-color:var(--emerald-light);color:var(--emerald-light);}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.md{background:#0d1a14;border:1px solid var(--glass-border);border-radius:18px;max-width:460px;width:100%;padding:26px;position:relative;}
+.fi{width:100%;padding:11px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:14px;margin-bottom:11px;}
+.fi::placeholder{color:var(--text-muted);}
+.fi:focus{outline:none;border-color:var(--emerald-light);}
+</style>{% endblock %}
+{% block content %}
+<p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;margin-top:-10px;">Manage your hiring roles and required skill sets. System defaults are always available — add custom roles for your company.</p>
+<div class="jg" id="jg"><div style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1;">Loading...</div></div>
+
+<div class="mo" id="mo" style="display:none;">
+    <div class="md">
+        <button onclick="closeModal()" style="position:absolute;top:13px;right:13px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">✕</button>
+        <h2 style="margin-bottom:18px;font-size:17px;">Add Job Role</h2>
+        <div style="display:flex;gap:8px;"><input class="fi" id="ne" placeholder="Emoji" maxlength="4" style="width:60px;flex-shrink:0;"><input class="fi" id="nt" placeholder="Role Title *" style="flex:1;"></div>
+        <input class="fi" id="nd" placeholder="Department (e.g. Engineering)">
+        <textarea class="fi" id="ns" placeholder="Required skills (comma-separated)&#10;e.g. React, TypeScript, Docker, AWS" style="min-height:75px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:9px;"><button class="btn btn-primary" onclick="saveRole()" style="flex:1;">Save Role</button><button onclick="closeModal()" style="flex:1;padding:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-secondary);font-family:inherit;cursor:pointer;">Cancel</button></div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+async function load(){
+    try{const d=await api.get('/api/company/jobs');renderJobs(d.jobs);}
+    catch(e){document.getElementById('jg').innerHTML=`<p style="color:var(--text-muted);">Error loading roles.</p>`;}
+}
+function renderJobs(jobs){
+    document.getElementById('jg').innerHTML=jobs.map(j=>{
+        const isSys=j.user_id==='system'||j.company_id==='system';
+        const avg=j.avg_score?Math.round(j.avg_score)+'%':'N/A';
+        return `<div class="jc">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+                <div><div style="font-size:30px;margin-bottom:5px;">${j.emoji}</div><div style="font-size:14px;font-weight:700;">${j.title}</div><div style="font-size:12px;color:var(--text-muted);">${j.department}</div></div>
+                ${isSys?`<span class="sc">System</span>`:`<button onclick="del('${j.id}')" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;padding:4px 8px;border-radius:7px;font-size:11px;cursor:pointer;">✕</button>`}
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:8px;">
+                <div style="font-size:12px;color:var(--text-secondary);">Candidates: <strong style="color:var(--emerald-light);font-family:'Space Mono';">${j.candidate_count}</strong></div>
+                <div style="font-size:12px;color:var(--text-secondary);">Avg: <strong style="color:var(--emerald-light);font-family:'Space Mono';">${avg}</strong></div>
+            </div>
+            <div>${(j.required_skills||[]).slice(0,5).map(s=>`<span class="sk">${s}</span>`).join('')}${(j.required_skills||[]).length>5?`<span class="sk">+${j.required_skills.length-5}</span>`:''}</div>
+            <a href="/company/candidates" style="display:block;text-align:center;margin-top:10px;padding:7px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);border-radius:8px;color:var(--emerald-light);font-size:12px;text-decoration:none;">View Candidates →</a>
+        </div>`;
+    }).join('')+`<div class="add-tile" onclick="openModal()"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Role</div>`;
+}
+function openModal(){document.getElementById('mo').style.display='flex';}
+function closeModal(){document.getElementById('mo').style.display='none';}
+async function saveRole(){
+    const t=document.getElementById('nt').value.trim();
+    if(!t){toast('Role title required','error');return;}
+    const sk=document.getElementById('ns').value.split(',').map(s=>s.trim()).filter(Boolean);
+    try{await api.post('/api/company/jobs',{emoji:document.getElementById('ne').value.trim()||'💼',title:t,department:document.getElementById('nd').value.trim()||'General',required_skills:sk});closeModal();toast('Role added!','success');load();}
+    catch(e){toast('Failed: '+e.message,'error');}
+}
+async function del(id){
+    if(!confirm('Delete this role?'))return;
+    try{await api.del(`/api/company/jobs/${id}`);toast('Deleted','success');load();}
+    catch(e){toast('Cannot delete: '+e.message,'error');}
+}
+document.getElementById('mo').addEventListener('click',function(e){if(e.target===this)closeModal();});
+load();
+</script>{% endblock %}

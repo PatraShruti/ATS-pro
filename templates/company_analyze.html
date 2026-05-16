@@ -1,0 +1,252 @@
+{% extends "company_base.html" %}
+{% block title %}Analyze Resume — ATS Pro{% endblock %}
+{% block n_analyze %}active{% endblock %}
+{% block page_title %}Analyze Resume{% endblock %}
+{% block extra_css %}<style>
+.upload-zone{border:2px dashed var(--glass-border);border-radius:14px;padding:36px;text-align:center;cursor:pointer;transition:all .3s;position:relative;background:rgba(0,0,0,.08);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--emerald-light);background:rgba(52,211,153,.04);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.role-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0;}
+.role-btn{padding:10px 6px;background:var(--glass-bg);border:2px solid var(--glass-border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;font-family:inherit;}
+.role-btn:hover{border-color:var(--emerald-light);}
+.role-btn.sel{border-color:var(--emerald);background:rgba(5,150,105,.15);}
+.role-btn .re{font-size:22px;display:block;margin-bottom:3px;}
+.role-btn .rn{font-size:11px;font-weight:600;color:var(--text-secondary);}
+.role-btn.sel .rn{color:var(--emerald-light);}
+.form-select{width:100%;padding:12px 15px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-primary);font-family:inherit;font-size:14px;cursor:pointer;appearance:none;margin-top:6px;}
+.form-select option{background:#0a0f0d;}
+.jd-area{width:100%;min-height:110px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-primary);font-family:inherit;font-size:13px;padding:12px;resize:vertical;line-height:1.6;}
+.jd-area::placeholder{color:var(--text-muted);}
+.jd-area:focus{outline:none;border-color:var(--emerald-light);}
+.ab{width:100%;padding:16px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border:none;border-radius:13px;color:#000;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .3s;box-shadow:0 8px 24px rgba(5,150,105,.3);margin-top:18px;}
+.ab:hover:not(:disabled){transform:translateY(-2px);}
+.ab:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.ld{display:inline-flex;gap:5px;}
+.ld span{width:7px;height:7px;background:#000;border-radius:50%;animation:lda 1.2s ease-in-out infinite;}
+.ld span:nth-child(2){animation-delay:.2s;}.ld span:nth-child(3){animation-delay:.4s;}
+@keyframes lda{0%,80%,100%{transform:scale(.5)}40%{transform:scale(1)}}
+/* Result */
+.ring-wrap{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;margin:0 auto;}
+.ring-wrap svg{position:absolute;top:0;left:0;transform:rotate(-90deg);}
+.ring-val{font-family:'Space Mono';font-size:34px;font-weight:700;z-index:1;}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.sub-item{background:rgba(0,0,0,.15);border-radius:10px;padding:11px 12px;}
+.ss-lbl{font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+.ss-bar{height:4px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;}
+.ss-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.ss-val{font-family:'Space Mono';font-size:12px;font-weight:700;margin-top:3px;}
+.tag{display:inline-block;padding:3px 9px;border-radius:9px;font-size:12px;margin:2px;}
+.tg{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e;}
+.tr{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;}
+.ty{background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.3);color:#eab308;}
+.tb{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);color:#60a5fa;}
+.flag-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--glass-border);font-size:13px;}
+.flag-item:last-child{border-bottom:none;}
+.hire-verdict{text-align:center;padding:18px;border-radius:14px;margin-bottom:14px;}
+.q-card{background:rgba(0,0,0,.12);border-left:3px solid var(--emerald);border-radius:0 10px 10px 0;padding:11px 13px;margin-bottom:8px;}
+.q-num{font-family:'Space Mono';font-size:10px;color:var(--emerald-light);margin-bottom:3px;}
+.rd-item{display:flex;gap:10px;padding:11px;background:rgba(0,0,0,.12);border-radius:10px;margin-bottom:7px;}
+.rd-n{width:26px;height:26px;border-radius:50%;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-size:11px;font-weight:700;flex-shrink:0;color:var(--emerald-light);}
+</style>{% endblock %}
+{% block content %}
+<p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;margin-top:-10px;">Upload a resume, select the role, and get a full AI hiring assessment.</p>
+<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:22px;">
+    <!-- LEFT: inputs -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="glass-card">
+            <div class="card-title" style="margin-bottom:12px;">📄 Upload Resume</div>
+            <div class="upload-zone" id="dz">
+                <input type="file" id="rf" accept=".pdf,.txt,.doc,.docx">
+                <div style="font-size:42px;margin-bottom:8px;">📎</div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Drop resume or click to browse</div>
+                <div style="font-size:12px;color:var(--text-muted);">PDF, DOCX, TXT — max 10 MB</div>
+                <div id="fl" style="color:var(--emerald-light);margin-top:8px;font-size:13px;font-weight:500;"></div>
+            </div>
+        </div>
+        <div class="glass-card">
+            <div class="card-title" style="margin-bottom:10px;">🎯 Target Role</div>
+            <div class="role-grid">
+                <button class="role-btn sel" data-role="Frontend Developer"><span class="re">⚛️</span><div class="rn">Frontend</div></button>
+                <button class="role-btn" data-role="Backend Developer"><span class="re">⚙️</span><div class="rn">Backend</div></button>
+                <button class="role-btn" data-role="Full Stack Developer"><span class="re">🔗</span><div class="rn">Full Stack</div></button>
+                <button class="role-btn" data-role="Data Scientist"><span class="re">📊</span><div class="rn">Data Sci</div></button>
+                <button class="role-btn" data-role="ML Engineer"><span class="re">🤖</span><div class="rn">ML Eng</div></button>
+                <button class="role-btn" data-role="DevOps Engineer"><span class="re">🐳</span><div class="rn">DevOps</div></button>
+                <button class="role-btn" data-role="Product Manager"><span class="re">📋</span><div class="rn">Product</div></button>
+                <button class="role-btn" data-role="UI/UX Designer"><span class="re">🎨</span><div class="rn">UI/UX</div></button>
+            </div>
+        </div>
+        <div class="glass-card">
+            <div class="card-title" style="margin-bottom:6px;">🏆 Experience Level</div>
+            <select class="form-select" id="exp">
+                <option>Entry Level (0-2 years)</option>
+                <option selected>Mid Level (2-5 years)</option>
+                <option>Senior Level (5-10 years)</option>
+                <option>Lead/Principal (10+ years)</option>
+            </select>
+        </div>
+        <div class="glass-card">
+            <div class="card-title" style="margin-bottom:4px;">📝 Job Description <span style="font-size:12px;font-weight:400;color:var(--text-muted);">(optional)</span></div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Paste the JD for precise matching</p>
+            <textarea class="jd-area" id="jd" placeholder="Paste job description here for role-specific ATS matching..."></textarea>
+        </div>
+        <button class="ab" id="ab">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Analyze & Get Hiring Decision
+        </button>
+    </div>
+
+    <!-- RIGHT: results -->
+    <div>
+        <div id="emptyState" class="glass-card" style="text-align:center;padding:52px 36px;">
+            <div style="font-size:56px;margin-bottom:16px;">🔍</div>
+            <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Ready to Analyze</h3>
+            <p style="color:var(--text-muted);font-size:14px;line-height:1.8;">Upload a resume and get:<br>ATS score · Hire/Reject decision · Skill gaps · Interview questions · Improvement roadmap</p>
+        </div>
+
+        <div id="resultsPanel" style="display:none;">
+            <!-- Hire verdict (most important for company) -->
+            <div id="hireVerdict" class="glass-card" style="margin-bottom:16px;text-align:center;padding:22px;">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:12px;">AI Hiring Recommendation</div>
+                <div id="hireLabel" style="font-size:28px;font-weight:800;margin-bottom:8px;"></div>
+                <div id="hireReasoning" style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-width:400px;margin:0 auto;"></div>
+            </div>
+
+            <!-- Score + breakdown -->
+            <div class="glass-card" style="margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding-bottom:16px;">
+                    <div style="text-align:center;">
+                        <div class="ring-wrap">
+                            <svg width="150" height="150" viewBox="0 0 150 150">
+                                <circle cx="75" cy="75" r="62" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="11"/>
+                                <circle cx="75" cy="75" r="62" fill="none" stroke="#22c55e" stroke-width="11"
+                                    stroke-dasharray="390" stroke-dashoffset="390" id="scoreArc" stroke-linecap="round"/>
+                            </svg>
+                            <div class="ring-val" id="sv">0%</div>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">ATS Score</div>
+                        <div id="gb" style="margin-top:6px;padding:3px 14px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;"></div>
+                    </div>
+                    <div style="flex:1;min-width:180px;">
+                        <div id="summary" style="font-size:13px;line-height:1.7;color:var(--text-secondary);margin-bottom:10px;"></div>
+                        <div class="sub-grid" id="subScores"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Green/Red flags -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                <div class="glass-card"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🟢 Green Flags</div><div id="greenFlags"></div></div>
+                <div class="glass-card"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🔴 Red Flags</div><div id="redFlags"></div></div>
+            </div>
+
+            <!-- Skills -->
+            <div class="glass-card" style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🎯 Skill Analysis</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px;">MATCHED</div><div id="matchedSkills"></div>
+                <div style="font-size:11px;color:var(--text-muted);margin:10px 0 5px;">MISSING</div><div id="missingSkills"></div>
+                <div style="font-size:11px;color:var(--text-muted);margin:10px 0 5px;">BONUS</div><div id="bonusSkills"></div>
+            </div>
+
+            <!-- Companies -->
+            <div class="glass-card" style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🏢 Eligible Companies</div>
+                <div id="companies" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            </div>
+
+            <!-- Interview questions -->
+            <div class="glass-card" style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">❓ Suggested Interview Questions</div>
+                <div id="questions"></div>
+            </div>
+
+            <!-- Roadmap -->
+            <div class="glass-card">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">💡 Improvement Roadmap</div>
+                <div id="roadmap"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+let selRole='Frontend Developer';
+const dz=document.getElementById('dz'),rf=document.getElementById('rf'),fl=document.getElementById('fl');
+rf.addEventListener('change',e=>{if(e.target.files[0])fl.textContent='✓ '+e.target.files[0].name;});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0]){rf.files=e.dataTransfer.files;fl.textContent='✓ '+e.dataTransfer.files[0].name;}});
+document.querySelectorAll('.role-btn').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.role-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selRole=b.dataset.role;});});
+
+document.getElementById('ab').addEventListener('click',async function(){
+    const file=rf.files[0];
+    if(!file){toast('Please upload a resume file.','error');return;}
+    this.disabled=true;
+    this.innerHTML=`<div class="ld"><span></span><span></span><span></span></div> AI is analyzing for hiring...`;
+    const fd=new FormData();
+    fd.append('resume',file);fd.append('role',selRole);
+    fd.append('experience_level',document.getElementById('exp').value);
+    fd.append('job_description',document.getElementById('jd').value);
+    try{
+        const d=await api.postForm('/api/company/analyze',fd);
+        renderResult(d.candidate);toast('Analysis complete!','success');
+    }catch(err){toast('Analysis failed: '+err.message,'error');}
+    this.disabled=false;
+    this.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Analyze & Get Hiring Decision`;
+});
+
+function renderResult(c){
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('resultsPanel').style.display='block';
+
+    // Hire verdict
+    const hmap={'Strong Hire':{bg:'rgba(34,197,94,.12)',bc:'rgba(34,197,94,.3)',col:'#22c55e',emoji:'🟢 Strong Hire'},
+                 'Hire':{bg:'rgba(52,211,153,.1)',bc:'rgba(52,211,153,.25)',col:'var(--emerald-light)',emoji:'✅ Hire'},
+                 'Maybe':{bg:'rgba(234,179,8,.1)',bc:'rgba(234,179,8,.25)',col:'#eab308',emoji:'🟡 Maybe'},
+                 'Reject':{bg:'rgba(239,68,68,.1)',bc:'rgba(239,68,68,.25)',col:'#f87171',emoji:'🔴 Reject'}};
+    const hv=hmap[c.hire_recommendation]||{bg:'rgba(148,163,184,.1)',bc:'rgba(148,163,184,.2)',col:'#94a3b8',emoji:'⏳ Pending'};
+    const vd=document.getElementById('hireVerdict');
+    vd.style.background=hv.bg;vd.style.border=`1px solid ${hv.bc}`;
+    document.getElementById('hireLabel').textContent=hv.emoji;
+    document.getElementById('hireLabel').style.color=hv.col;
+    document.getElementById('hireReasoning').textContent=c.hire_reasoning||'';
+
+    // Score
+    const arc=document.getElementById('scoreArc');
+    arc.style.stroke=c.score>=80?'#22c55e':c.score>=55?'#eab308':'#ef4444';
+    document.getElementById('sv').textContent=c.score+'%';
+    setTimeout(()=>{arc.style.transition='stroke-dashoffset 1.2s ease';arc.style.strokeDashoffset=390-(c.score/100)*390;},100);
+    const gb=document.getElementById('gb');
+    gb.textContent=c.grade;gb.style.background=c.score>=80?'rgba(34,197,94,.15)':c.score>=55?'rgba(234,179,8,.15)':'rgba(239,68,68,.15)';gb.style.color=c.score>=80?'#22c55e':c.score>=55?'#eab308':'#ef4444';
+    document.getElementById('summary').textContent=c.summary||'';
+    document.getElementById('subScores').innerHTML=[['Skills',c.skills_score,'var(--emerald)'],['Exp.',c.experience_score,'var(--gold)'],['Keywords',c.keywords_score,'#60a5fa'],['Format',c.format_score,'var(--coral)']].map(([l,v,col])=>{const pct=Math.min(v||0,100);return `<div class="sub-item"><div class="ss-lbl">${l}</div><div class="ss-bar"><div class="ss-fill" style="width:0%;background:${col};" data-w="${pct}"></div></div><div class="ss-val">${pct}%</div></div>`;}).join('');
+    setTimeout(()=>document.querySelectorAll('.ss-fill').forEach(el=>{el.style.transition='width 1s ease';el.style.width=el.dataset.w+'%';}),200);
+
+    // Flags
+    document.getElementById('greenFlags').innerHTML=(c.green_flags||[]).map(f=>`<div class="flag-item"><span style="color:#22c55e;flex-shrink:0;">✓</span>${f}</div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">None noted</div>';
+    document.getElementById('redFlags').innerHTML=(c.red_flags||[]).map(f=>`<div class="flag-item"><span style="color:#f87171;flex-shrink:0;">✗</span>${f}</div>`).join('')||'<div style="color:#22c55e;font-size:13px;">No red flags!</div>';
+
+    // Skills
+    document.getElementById('matchedSkills').innerHTML=(c.matched_skills||[]).map(s=>`<span class="tag tg">${s}</span>`).join('');
+    document.getElementById('missingSkills').innerHTML=(c.missing_skills||[]).map(s=>`<span class="tag tr">${s}</span>`).join('');
+    document.getElementById('bonusSkills').innerHTML=(c.bonus_skills||[]).map(s=>`<span class="tag ty">${s}</span>`).join('')||'<span style="color:var(--text-muted);font-size:12px;">None</span>';
+
+    // Companies
+    document.getElementById('companies').innerHTML=(c.eligible_companies||[]).map(co=>{
+        const tc={'Tier 1':'rgba(52,211,153,.12)','Tier 2':'rgba(212,165,116,.12)','Tier 3':'rgba(71,85,105,.2)'}[co.tier]||'var(--glass-bg)';
+        return `<div style="display:flex;align-items:center;gap:8px;background:${tc};border:1px solid var(--glass-border);border-radius:9px;padding:7px 12px;font-size:13px;"><span>🏢</span><div><div style="font-weight:600;">${co.name}</div><div style="font-size:10px;color:var(--text-muted);">${co.reason||''}</div></div><span style="font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(52,211,153,.15);color:var(--emerald-light);font-weight:600;margin-left:auto;">${co.tier}</span></div>`;
+    }).join('');
+
+    // Questions
+    const dcls={'Easy':'rgba(34,197,94,.12)','Medium':'rgba(234,179,8,.12)','Hard':'rgba(239,68,68,.12)'};
+    const dclr={'Easy':'#22c55e','Medium':'#eab308','Hard':'#f87171'};
+    document.getElementById('questions').innerHTML=(c.interview_questions||[]).slice(0,5).map((q,i)=>`<div class="q-card"><div class="q-num">Q${i+1} · ${q.topic||'General'}</div><div style="font-size:13px;line-height:1.6;">${q.question}</div><span style="font-size:11px;padding:2px 8px;border-radius:8px;display:inline-block;margin-top:5px;font-weight:500;background:${dcls[q.difficulty]};color:${dclr[q.difficulty]}">${q.difficulty}</span></div>`).join('');
+
+    // Roadmap
+    const pc={'High':'#f87171','Medium':'#eab308','Low':'#22c55e'};
+    document.getElementById('roadmap').innerHTML=(c.roadmap||[]).map(s=>`<div class="rd-item"><div class="rd-n">${s.step}</div><div style="flex:1;"><div style="font-weight:600;font-size:13px;margin-bottom:2px;">${s.title} <span style="font-size:10px;padding:2px 7px;border-radius:7px;background:rgba(255,255,255,.05);color:${pc[s.priority]}">${s.priority}</span></div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${s.description}</div></div></div>`).join('');
+
+    document.getElementById('resultsPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    document.getElementById('cBadge').textContent=parseInt(document.getElementById('cBadge').textContent||0)+1;
+}
+</script>{% endblock %}

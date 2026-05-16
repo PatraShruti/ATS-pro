@@ -1,0 +1,217 @@
+{% extends "company_base.html" %}
+{% block title %}Compare Candidates — ATS Pro{% endblock %}
+{% block n_compare %}active{% endblock %}
+{% block page_title %}Compare & Decide{% endblock %}
+{% block extra_css %}<style>
+.cand-sel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:340px;overflow-y:auto;padding:2px;}
+.cand-sel-item{background:var(--glass-bg);border:2px solid var(--glass-border);border-radius:12px;padding:13px;cursor:pointer;transition:all .2s;}
+.cand-sel-item:hover{border-color:var(--emerald-light);}
+.cand-sel-item.chk{border-color:var(--emerald);background:rgba(5,150,105,.12);}
+.cand-sel-item .cn{font-size:13px;font-weight:600;margin-bottom:2px;}
+.cand-sel-item .cr{font-size:11px;color:var(--text-muted);}
+.cand-av{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--emerald),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.compare-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border:none;border-radius:12px;color:#000;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .3s;box-shadow:0 8px 24px rgba(5,150,105,.3);margin-top:14px;}
+.compare-btn:hover:not(:disabled){transform:translateY(-2px);}
+.compare-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.ld{display:inline-flex;gap:5px;}
+.ld span{width:7px;height:7px;background:#000;border-radius:50%;animation:lda 1.2s ease-in-out infinite;}
+.ld span:nth-child(2){animation-delay:.2s;}.ld span:nth-child(3){animation-delay:.4s;}
+@keyframes lda{0%,80%,100%{transform:scale(.5)}40%{transform:scale(1)}}
+/* Results */
+.verdict-card{border-radius:15px;padding:20px;margin-bottom:12px;border:2px solid;text-align:center;}
+.v-interview{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.4);}
+.v-shortlist{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.3);}
+.v-hold{background:rgba(234,179,8,.06);border-color:rgba(234,179,8,.3);}
+.v-reject{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.3);}
+.rank-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;}
+.rank-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-size:15px;font-weight:700;flex-shrink:0;}
+.rank-1{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;}
+.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b);color:#000;}
+.rank-3{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;}
+.rank-n{background:rgba(255,255,255,.08);color:var(--text-secondary);}
+.verdict-pill{display:inline-block;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:600;margin-top:4px;}
+.vp-i{background:rgba(34,197,94,.15);color:#22c55e;}
+.vp-s{background:rgba(52,211,153,.1);color:var(--emerald-light);}
+.vp-h{background:rgba(234,179,8,.1);color:#eab308;}
+.vp-r{background:rgba(239,68,68,.1);color:#f87171;}
+.insight-box{background:rgba(0,0,0,.15);border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.8;color:var(--text-secondary);}
+.insight-box .ih{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
+.sel-scroll::-webkit-scrollbar{width:5px;}
+.sel-scroll::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:3px;}
+</style>{% endblock %}
+{% block content %}
+<p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;margin-top:-10px;">Select 2–5 candidates for the same role and get an AI-powered hiring decision — who to interview, shortlist, or reject.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1.4fr;gap:22px;">
+    <!-- LEFT: candidate selector -->
+    <div>
+        <div class="glass-card" style="margin-bottom:16px;">
+            <div class="card-title" style="margin-bottom:6px;">Select Candidates to Compare</div>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Choose 2–5 from the same or similar role</p>
+            <div id="selGrid" class="cand-sel-grid sel-scroll">
+                <div style="text-align:center;padding:30px;color:var(--text-muted);grid-column:1/-1;font-size:13px;">Loading candidates...</div>
+            </div>
+            <div style="margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.12);border-radius:10px;font-size:13px;color:var(--text-muted);">
+                Selected: <strong id="selCount" style="color:var(--emerald-light);">0</strong> candidates
+            </div>
+        </div>
+        <button class="compare-btn" id="compareBtn" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            Get AI Hiring Decision
+        </button>
+    </div>
+
+    <!-- RIGHT: results -->
+    <div>
+        <div id="emptyState" class="glass-card" style="text-align:center;padding:52px 36px;">
+            <div style="font-size:56px;margin-bottom:16px;">⚖️</div>
+            <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">AI Comparison Engine</h3>
+            <p style="color:var(--text-muted);font-size:14px;line-height:1.8;">Select candidates on the left and click "Get AI Hiring Decision" to get:<br><br>
+            🏆 Ranked leaderboard &nbsp;·&nbsp; ✅ Interview list<br>🔴 Reject list &nbsp;·&nbsp; 📝 Detailed reasoning</p>
+        </div>
+
+        <div id="compareResults" style="display:none;">
+            <!-- Decision summary -->
+            <div class="glass-card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(52,211,153,.05),rgba(212,165,116,.04));border-color:rgba(52,211,153,.2);">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:8px;">🏆 Top Pick</div>
+                <div id="topPick" style="font-size:22px;font-weight:800;color:var(--emerald-light);margin-bottom:6px;"></div>
+                <div id="compSummary" class="insight-box" style="margin-bottom:0;"></div>
+            </div>
+
+            <!-- Ranked list -->
+            <div class="glass-card" style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:12px;">📊 Full Ranking</div>
+                <div id="rankingList"></div>
+            </div>
+
+            <!-- Verdict lists -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="glass-card v-interview" style="border-radius:14px;">
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#22c55e;margin-bottom:8px;">✅ Interview</div>
+                    <div id="interviewList"></div>
+                </div>
+                <div class="glass-card v-reject" style="border-radius:14px;">
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#f87171;margin-bottom:8px;">🔴 Reject</div>
+                    <div id="rejectList"></div>
+                </div>
+                <div class="glass-card v-shortlist" style="border-radius:14px;">
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--emerald-light);margin-bottom:8px;">📋 Shortlist</div>
+                    <div id="shortlistList"></div>
+                </div>
+                <div class="glass-card v-hold" style="border-radius:14px;">
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#eab308;margin-bottom:8px;">⏸ Hold</div>
+                    <div id="holdList"></div>
+                </div>
+            </div>
+
+            <!-- AI analysis -->
+            <div class="glass-card">
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:12px;">🤖 AI Hiring Analysis</div>
+                <div class="insight-box"><div class="ih">Role Fit Analysis</div><div id="roleFit"></div></div>
+                <div class="insight-box"><div class="ih">Skills Comparison</div><div id="skillsComp"></div></div>
+                <div class="insight-box"><div class="ih">Final Recommendation</div><div id="finalRec"></div></div>
+                <div style="display:flex;gap:10px;align-items:center;padding:10px 0;">
+                    <span style="font-size:12px;color:var(--text-muted);">Hiring Risk:</span>
+                    <span id="hiringRisk" style="font-size:12px;font-weight:600;padding:2px 10px;border-radius:8px;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+let allCands=[], selIds=new Set();
+
+async function loadCands(){
+    try{
+        const d=await api.get('/api/company/candidates?sort=ats_score&order=desc');
+        allCands=d.candidates;
+        renderGrid();
+    }catch(e){document.getElementById('selGrid').innerHTML=`<div style="color:var(--text-muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px;">No candidates yet. <a href="/company/analyze" style="color:var(--emerald-light);">Analyze some resumes first →</a></div>`;}
+}
+
+function renderGrid(){
+    const grid=document.getElementById('selGrid');
+    if(!allCands.length){grid.innerHTML=`<div style="text-align:center;padding:30px;color:var(--text-muted);grid-column:1/-1;">No candidates yet. <a href="/company/analyze" style="color:var(--emerald-light);">Analyze resumes first →</a></div>`;return;}
+    grid.innerHTML=allCands.map(c=>{
+        const cls=selIds.has(c.id)?'chk':'';
+        return `<div class="cand-sel-item ${cls}" data-id="${c.id}" onclick="toggleSel('${c.id}')">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <div class="cand-av">${c.name[0]}</div>
+                <div style="flex:1;min-width:0;">
+                    <div class="cn">${c.name}</div>
+                    <div class="cr">${c.role}</div>
+                </div>
+                <span class="score-pill ${scoreClass(c.ats_score)}" style="font-size:11px;padding:2px 8px;">${c.ats_score}%</span>
+            </div>
+            ${selIds.has(c.id)?'<div style="font-size:11px;color:var(--emerald-light);font-weight:600;">✓ Selected</div>':''}
+        </div>`;
+    }).join('');
+}
+
+function toggleSel(id){
+    if(selIds.has(id)){selIds.delete(id);}
+    else if(selIds.size<5){selIds.add(id);}
+    else{toast('Max 5 candidates','warn');return;}
+    document.getElementById('selCount').textContent=selIds.size;
+    document.getElementById('compareBtn').disabled=selIds.size<2;
+    renderGrid();
+}
+
+document.getElementById('compareBtn').addEventListener('click',async function(){
+    if(selIds.size<2){toast('Select at least 2 candidates','error');return;}
+    const sel=allCands.filter(c=>selIds.has(c.id));
+    const role=sel[0]?.role||'';
+    this.disabled=true;
+    this.innerHTML=`<div class="ld"><span></span><span></span><span></span></div> AI is comparing candidates...`;
+    try{
+        const d=await api.post('/api/company/compare',{candidate_ids:[...selIds],role});
+        renderResults(d.comparison,d.candidates);
+        toast('Comparison complete!','success');
+    }catch(e){toast('Comparison failed: '+e.message,'error');}
+    this.disabled=false;
+    this.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg> Get AI Hiring Decision`;
+});
+
+function renderResults(r,cands){
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('compareResults').style.display='block';
+    document.getElementById('topPick').textContent='🥇 '+r.top_pick;
+    document.getElementById('compSummary').textContent=r.comparison_summary||'';
+
+    const vCls={Interview:'vp-i',Shortlist:'vp-s',Hold:'vp-h',Reject:'vp-r'};
+    const rankCls=['rank-1','rank-2','rank-3'];
+    document.getElementById('rankingList').innerHTML=(r.ranking||[]).map((item,i)=>`
+        <div class="rank-card">
+            <div class="rank-num ${rankCls[i]||'rank-n'}">${item.rank}</div>
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-weight:700;font-size:14px;">${item.candidate_name}</span>
+                    <span class="score-pill ${scoreClass(item.score||0)}">${item.score||0}%</span>
+                    <span class="verdict-pill ${vCls[item.verdict]||'vp-h'}">${item.verdict}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">${item.reason}</div>
+            </div>
+        </div>`).join('');
+
+    const nameList=(arr)=>arr&&arr.length?arr.map(n=>`<div style="padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:13px;font-weight:500;">${n}</div>`).join(''):'<div style="color:var(--text-muted);font-size:13px;">None</div>';
+    document.getElementById('interviewList').innerHTML=nameList(r.interview_list);
+    document.getElementById('rejectList').innerHTML=nameList(r.reject_list);
+    document.getElementById('shortlistList').innerHTML=nameList(r.shortlist_list);
+    document.getElementById('holdList').innerHTML=nameList(r.hold_list);
+
+    document.getElementById('roleFit').textContent=r.role_fit_analysis||'—';
+    document.getElementById('skillsComp').textContent=r.skills_comparison||'—';
+    document.getElementById('finalRec').textContent=r.recommendation||'—';
+
+    const riskEl=document.getElementById('hiringRisk');
+    const risk=r.hiring_risk||'Medium';
+    riskEl.textContent=risk;
+    riskEl.style.background=risk==='Low'?'rgba(34,197,94,.12)':risk==='High'?'rgba(239,68,68,.12)':'rgba(234,179,8,.12)';
+    riskEl.style.color=risk==='Low'?'#22c55e':risk==='High'?'#f87171':'#eab308';
+
+    document.getElementById('compareResults').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+loadCands();
+</script>{% endblock %}

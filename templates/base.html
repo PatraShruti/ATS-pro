@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ATS Pro{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/glass-admin.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="background"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="dashboard">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">A</div>
+            <span class="logo-text">ATS Pro</span>
+        </div>
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-section">
+                    <p class="nav-section-title">Main</p>
+                    <ul>
+                        <li class="nav-item">
+                            <a href="/" class="nav-link {% block nav_dashboard %}{% endblock %}">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/analyze" class="nav-link {% block nav_analyze %}{% endblock %}">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                Analyze Resume
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/candidates" class="nav-link {% block nav_candidates %}{% endblock %}">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                Candidates
+                                <span class="nav-badge" id="candidateBadge">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/analytics" class="nav-link {% block nav_analytics %}{% endblock %}">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Analytics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/jobs" class="nav-link {% block nav_jobs %}{% endblock %}">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                Job Roles
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-section">
+                    <p class="nav-section-title">Account</p>
+                    <ul>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" id="logoutLink" onclick="logout(event)">
+                                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar" id="sidebarAvatar">A</div>
+                <div class="user-info">
+                    <div class="user-name" id="sidebarName">Loading...</div>
+                    <div class="user-role" id="sidebarRole">HR Manager</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- TOP NAVBAR -->
+        <div class="navbar">
+            <button class="mobile-menu-toggle" id="mobileMenuBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="navbar-right">
+                {% block navbar_actions %}{% endblock %}
+                <button class="nav-btn" id="theme-toggle" title="Toggle Theme">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="/static/js/glass-admin-script.js"></script>
+<script src="/static/js/api.js"></script>
+<script>
+// Auth guard + load user info
+(async function() {
+    const token = localStorage.getItem('ats_token');
+    if (!token) { window.location.href = '/login'; return; }
+    try {
+        const res = await api.get('/api/auth/me');
+        const u = res.user;
+        document.getElementById('sidebarName').textContent = u.name;
+        document.getElementById('sidebarAvatar').textContent = u.name[0].toUpperCase();
+        document.getElementById('sidebarRole').textContent = u.company || u.role || 'HR Manager';
+    } catch(e) {
+        localStorage.removeItem('ats_token');
+        window.location.href = '/login';
+    }
+    // Load candidate count badge
+    try {
+        const res = await api.get('/api/dashboard');
+        document.getElementById('candidateBadge').textContent = res.total || 0;
+    } catch(e) {}
+})();
+
+function logout(e) {
+    e.preventDefault();
+    localStorage.removeItem('ats_token');
+    window.location.href = '/login';
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

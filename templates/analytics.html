@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Analytics — ATS Pro{% endblock %}
+{% block nav_analytics %}active{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px;}
+.chart-frame{position:relative;height:260px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:26px;grid-template-columns:repeat(4,1fr);">
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Total Resumes</h3><div class="stat-value" id="sTotal">—</div><span class="stat-change positive">All time</span></div>
+            <div class="stat-icon cyan"><svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald-light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Avg ATS Score</h3><div class="stat-value" id="sAvg">—</div><span class="stat-change positive">Mean</span></div>
+            <div class="stat-icon magenta"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Excellent Fits</h3><div class="stat-value" id="sExcellent">—</div><span class="stat-change positive">Score ≥ 80</span></div>
+            <div class="stat-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        </div>
+    </div>
+    <div class="glass-card glass-card-3d stat-card">
+        <div class="stat-card-inner">
+            <div class="stat-info"><h3>Unique Roles</h3><div class="stat-value" id="sRoles">—</div><span class="stat-change positive">Positions</span></div>
+            <div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        </div>
+    </div>
+</div>
+
+<div id="emptyState" style="display:none;">
+    <div class="glass-card" style="text-align:center;padding:60px;">
+        <div style="font-size:56px;margin-bottom:16px;">📊</div>
+        <h3 style="font-size:20px;margin-bottom:10px;">No Data Yet</h3>
+        <p style="color:var(--text-muted);margin-bottom:20px;">Analyze some resumes to see insights here.</p>
+        <a href="/analyze" class="btn btn-primary" style="text-decoration:none;display:inline-flex;width:auto;">Analyze a Resume</a>
+    </div>
+</div>
+
+<div id="chartsWrap">
+    <div class="charts-grid">
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">Score Distribution</h3><p class="card-subtitle">ATS score levels</p></div></div>
+            <div class="chart-frame"><canvas id="scoreDist"></canvas></div>
+        </div>
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">Role Distribution</h3><p class="card-subtitle">Candidates per role</p></div></div>
+            <div class="chart-frame"><canvas id="roleDist"></canvas></div>
+        </div>
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">Score Trend</h3><p class="card-subtitle">ATS scores over time</p></div></div>
+            <div class="chart-frame"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">Top Skill Gaps</h3><p class="card-subtitle">Most common missing skills</p></div></div>
+            <div class="chart-frame"><canvas id="skillGaps"></canvas></div>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:22px;margin-bottom:22px;">
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">🏢 Company Match Frequency</h3><p class="card-subtitle">Most eligible employers</p></div></div>
+            <div class="chart-frame" style="height:220px;"><canvas id="companyChart"></canvas></div>
+        </div>
+        <div class="glass-card">
+            <div class="card-header"><div><h3 class="card-title">Pipeline Status</h3><p class="card-subtitle">Candidate stages</p></div></div>
+            <div class="chart-frame" style="height:220px;"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-header"><div><h3 class="card-title">Avg Score by Role</h3><p class="card-subtitle">Which roles score highest</p></div></div>
+        <div class="chart-frame" style="height:220px;"><canvas id="roleAvgChart"></canvas></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+async function loadAnalytics(){
+    try {
+        const d = await api.get('/api/analytics');
+        document.getElementById('sTotal').textContent = d.total;
+        document.getElementById('sAvg').textContent = (d.avg_score||0)+'%';
+        document.getElementById('sExcellent').textContent = d.excellent;
+        document.getElementById('sRoles').textContent = d.roles_count;
+
+        if(d.total===0){
+            document.getElementById('emptyState').style.display='block';
+            document.getElementById('chartsWrap').style.display='none';
+            return;
+        }
+
+        Chart.defaults.color='rgba(245,245,244,0.7)';
+        Chart.defaults.borderColor='rgba(255,255,255,0.07)';
+        const baseOpts={responsive:true,maintainAspectRatio:false,animation:{duration:900},plugins:{legend:{labels:{color:'rgba(245,245,244,0.7)',font:{family:'Outfit',size:12}}}}};
+        const colors=['#34d399','#60a5fa','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#4ade80'];
+
+        // Score distribution doughnut
+        new Chart(document.getElementById('scoreDist'),{type:'doughnut',
+            data:{labels:Object.keys(d.score_dist),datasets:[{data:Object.values(d.score_dist),backgroundColor:['#ef4444','#f87171','#eab308','#22c55e','#16a34a'],borderColor:'rgba(255,255,255,0.05)',borderWidth:2}]},
+            options:{...baseOpts,cutout:'60%'}});
+
+        // Role bar
+        new Chart(document.getElementById('roleDist'),{type:'bar',
+            data:{labels:Object.keys(d.role_dist),datasets:[{data:Object.values(d.role_dist),backgroundColor:Object.keys(d.role_dist).map((_,i)=>colors[i%colors.length]),borderRadius:8,borderSkipped:false}]},
+            options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{font:{size:10}}}}}});
+
+        // Trend line
+        const tr = d.trend||[];
+        const ptColors=tr.map(t=>t.score>=80?'#22c55e':t.score>=50?'#eab308':'#ef4444');
+        new Chart(document.getElementById('trendChart'),{type:'line',
+            data:{labels:tr.map((_,i)=>'#'+(i+1)),datasets:[{label:'ATS Score',data:tr.map(t=>t.score),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,0.08)',pointBackgroundColor:ptColors,tension:0.4,fill:true,pointRadius:5}]},
+            options:{...baseOpts,scales:{y:{min:0,max:100}}}});
+
+        // Skill gaps horizontal bar
+        const sg=Object.entries(d.missing_skills_freq||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        new Chart(document.getElementById('skillGaps'),{type:'bar',
+            data:{labels:sg.map(s=>s[0]),datasets:[{data:sg.map(s=>s[1]),backgroundColor:'rgba(248,113,113,0.55)',borderColor:'#f87171',borderWidth:1,borderRadius:6}]},
+            options:{...baseOpts,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}});
+
+        // Company
+        const cf=Object.entries(d.company_freq||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        new Chart(document.getElementById('companyChart'),{type:'bar',
+            data:{labels:cf.map(c=>c[0]),datasets:[{data:cf.map(c=>c[1]),backgroundColor:cf.map((_,i)=>colors[i%colors.length]),borderRadius:7}]},
+            options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+
+        // Status
+        new Chart(document.getElementById('statusChart'),{type:'pie',
+            data:{labels:Object.keys(d.status_dist),datasets:[{data:Object.values(d.status_dist),backgroundColor:['#60a5fa','#34d399','#eab308','#22c55e','#f87171'],borderColor:'rgba(255,255,255,0.05)',borderWidth:2}]},
+            options:{...baseOpts}});
+
+        // Avg by role
+        const ar=d.avg_by_role||{};
+        new Chart(document.getElementById('roleAvgChart'),{type:'bar',
+            data:{labels:Object.keys(ar),datasets:[{label:'Avg Score %',data:Object.values(ar),backgroundColor:Object.keys(ar).map((_,i)=>colors[i%colors.length]),borderRadius:8,borderSkipped:false}]},
+            options:{...baseOpts,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:11}}}}}});
+
+    } catch(e){ console.error(e); }
+}
+loadAnalytics();
+</script>
+{% endblock %}

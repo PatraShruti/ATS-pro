@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATS Pro — AI-Powered Resume & Hiring Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/glass-admin.css">
+<style>
+body{min-height:100vh;display:flex;flex-direction:column;}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;position:relative;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:30px;padding:8px 20px;font-size:13px;color:var(--emerald-light);margin-bottom:28px;}
+.hero-title{font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.1;margin-bottom:20px;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.7) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-title span{background:linear-gradient(135deg,var(--emerald-light),var(--gold));-webkit-background-clip:text;background-clip:text;}
+.hero-sub{font-size:18px;color:var(--text-secondary);max-width:560px;line-height:1.7;margin-bottom:56px;}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:860px;width:100%;}
+.path-card{background:var(--glass-bg);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:24px;padding:40px 36px;text-align:left;cursor:pointer;transition:all .3s;text-decoration:none;color:inherit;position:relative;overflow:hidden;}
+.path-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);}
+.path-card:hover{transform:translateY(-6px);box-shadow:0 32px 64px rgba(0,0,0,.4);}
+.path-card.guest:hover{border-color:var(--emerald-light);box-shadow:0 32px 64px rgba(52,211,153,.15);}
+.path-card.company:hover{border-color:var(--gold);box-shadow:0 32px 64px rgba(212,165,116,.15);}
+.path-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;}
+.path-card.guest .path-icon{background:linear-gradient(135deg,rgba(52,211,153,.2),rgba(52,211,153,.05));border:1px solid rgba(52,211,153,.3);}
+.path-card.company .path-icon{background:linear-gradient(135deg,rgba(212,165,116,.2),rgba(212,165,116,.05));border:1px solid rgba(212,165,116,.3);}
+.path-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.path-card.guest .path-label{color:var(--emerald-light);}
+.path-card.company .path-label{color:var(--gold-light);}
+.path-title{font-size:24px;font-weight:700;margin-bottom:10px;}
+.path-desc{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:24px;}
+.path-features{list-style:none;padding:0;margin:0 0 28px 0;}
+.path-features li{font-size:13px;color:var(--text-secondary);padding:5px 0;display:flex;align-items:center;gap:8px;}
+.path-features li::before{content:'✓';color:var(--emerald-light);font-weight:700;flex-shrink:0;}
+.path-card.company .path-features li::before{color:var(--gold-light);}
+.path-cta{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
+.path-card.guest .path-cta{background:linear-gradient(135deg,var(--emerald),var(--emerald-light));color:#000;}
+.path-card.company .path-cta{background:linear-gradient(135deg,var(--amber),var(--gold));color:#000;}
+.no-account{font-size:12px;color:var(--text-muted);margin-top:8px;}
+.stats{display:flex;gap:40px;justify-content:center;margin-top:56px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Space Mono';font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--emerald-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-lbl{font-size:12px;color:var(--text-muted);margin-top:4px;}
+@media(max-width:640px){.paths{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="background"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+
+<nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;position:relative;z-index:10;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--emerald),var(--gold));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">A</div>
+        <span style="font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--emerald-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ATS Pro</span>
+    </div>
+    <div style="display:flex;gap:12px;">
+        <a href="/company/login" style="padding:9px 20px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;font-size:14px;color:var(--text-secondary);text-decoration:none;transition:all .2s;" onmouseover="this.style.borderColor='var(--emerald-light)'" onmouseout="this.style.borderColor='var(--glass-border)'">Company Login</a>
+        <a href="/company/register" style="padding:9px 20px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border:none;border-radius:10px;font-size:14px;color:#000;font-weight:600;text-decoration:none;">Get Started</a>
+    </div>
+</nav>
+
+<div class="hero">
+        <h1 class="hero-title">Smart Hiring Starts<br>with <span>Better Screening</span></h1>
+    <p class="hero-sub">Whether you're a job seeker checking your resume or a company screening hundreds of applicants — ATS Pro has you covered.</p>
+
+    <div class="paths">
+        <!-- Guest path -->
+        <a href="/check" class="path-card guest">
+            <div class="path-icon">📄</div>
+            <div class="path-label">For Job Seekers</div>
+            <h2 class="path-title">Check My Resume</h2>
+            <p class="path-desc">Get an instant AI-powered ATS score, language improvements, and exactly what to fix — no account needed.</p>
+            <ul class="path-features">
+                <li>Overall ATS score (0–100)</li>
+                <li>Role-specific gap analysis</li>
+                <li>Language & grammar fixes</li>
+                <li>Keyword recommendations</li>
+                <li>Rewrite suggestions</li>
+            </ul>
+            <button class="path-cta">
+                Check My Resume Free
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div class="no-account">✓ No account needed &nbsp;·&nbsp; Free &nbsp;·&nbsp; Instant results</div>
+        </a>
+
+        <!-- Company path -->
+        <a href="/company/register" class="path-card company">
+            <div class="path-icon">🏢</div>
+            <div class="path-label">For Companies</div>
+            <h2 class="path-title">Hire Smarter</h2>
+            <p class="path-desc">Screen, score, compare, and track candidates at scale. Get AI recommendations on who to interview and who to reject.</p>
+            <ul class="path-features">
+                <li>Bulk resume screening</li>
+                <li>Side-by-side comparison</li>
+                <li>Hire / Reject AI recommendations</li>
+                <li>Full hiring pipeline tracking</li>
+                <li>Analytics & insights dashboard</li>
+            </ul>
+            <button class="path-cta">
+                Start Hiring Free
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div class="no-account" style="color:var(--text-muted);">Account required &nbsp;·&nbsp; Free plan available</div>
+        </a>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">AI-powered analysis</div></div>
+        <div class="stat"><div class="stat-num">8+</div><div class="stat-lbl">Job roles supported</div></div>
+        <div class="stat"><div class="stat-num">60s</div><div class="stat-lbl">Average analysis time</div></div>
+        <div class="stat"><div class="stat-num">PDF</div><div class="stat-lbl">DOCX &amp; TXT support</div></div>
+    </div>
+</div>
+
+<footer style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">
+    © 2026 ATS Pro — AI-Powered Hiring Platform
+</footer>
+<script src="/static/js/glass-admin-script.js"></script>
+</body>
+</html>

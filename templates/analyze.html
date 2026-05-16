@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Analyze Resume — ATS Pro{% endblock %}
+{% block nav_analyze %}active{% endblock %}
+{% block page_title %}Analyze Resume{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-zone{border:2px dashed var(--glass-border);border-radius:16px;padding:44px;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--glass-bg);position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--emerald-light);background:rgba(52,211,153,0.05);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.role-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:10px 0;}
+.role-card{background:var(--glass-bg);border:2px solid var(--glass-border);border-radius:11px;padding:13px 8px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.role-card:hover{border-color:var(--emerald-light);}
+.role-card.selected{border-color:var(--emerald);background:rgba(5,150,105,0.15);}
+.role-card .r-emoji{font-size:24px;display:block;margin-bottom:4px;}
+.role-card .r-name{font-size:11px;font-weight:600;}
+.role-card .r-dept{font-size:10px;color:var(--text-muted);}
+.analyze-btn{width:100%;padding:17px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border:none;border-radius:13px;color:white;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.3s;box-shadow:0 8px 24px rgba(5,150,105,0.3);margin-top:18px;}
+.analyze-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 36px rgba(5,150,105,0.4);}
+.analyze-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.jd-textarea{width:100%;min-height:120px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-primary);font-family:inherit;font-size:13px;padding:13px;resize:vertical;line-height:1.6;}
+.jd-textarea::placeholder{color:var(--text-muted);}
+.jd-textarea:focus{outline:none;border-color:var(--emerald-light);}
+.form-select{width:100%;padding:13px 16px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;color:var(--text-primary);font-family:inherit;font-size:14px;cursor:pointer;appearance:none;margin-top:6px;}
+.form-select:focus{outline:none;border-color:var(--emerald-light);}
+.form-select option{background:#0a0f0d;}
+.score-ring-wrap{display:flex;flex-direction:column;align-items:center;}
+.breakdown-item{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:13px 15px;}
+.breakdown-label{font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500;}
+.breakdown-bar{height:5px;background:var(--glass-border);border-radius:3px;overflow:hidden;}
+.breakdown-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.breakdown-score{font-family:'Space Mono';font-size:14px;font-weight:700;margin-top:4px;}
+.q-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:14px 16px;margin-bottom:9px;}
+.q-num{font-family:'Space Mono';font-size:10px;color:var(--emerald-light);margin-bottom:4px;}
+.q-difficulty{font-size:11px;padding:2px 8px;border-radius:10px;display:inline-block;font-weight:500;margin-top:6px;}
+.diff-easy{background:rgba(34,197,94,0.12);color:#22c55e;}
+.diff-medium{background:rgba(234,179,8,0.12);color:#eab308;}
+.diff-hard{background:rgba(239,68,68,0.12);color:#f87171;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1.25fr;gap:24px;">
+    <!-- LEFT PANEL -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+        <!-- Upload -->
+        <div class="glass-card">
+            <h3 class="card-title" style="margin-bottom:14px;">📄 Upload Resume</h3>
+            <div class="upload-zone" id="dropZone">
+                <input type="file" id="resumeFile" accept=".pdf,.txt,.doc,.docx">
+                <div style="font-size:50px;margin-bottom:10px;">📎</div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:5px;">Drop resume here</div>
+                <div style="font-size:13px;color:var(--text-muted);">PDF, DOCX, TXT · max 10 MB</div>
+                <div id="fileName" style="color:var(--emerald-light);margin-top:8px;font-size:13px;font-weight:500;"></div>
+            </div>
+        </div>
+
+        <!-- Role -->
+        <div class="glass-card">
+            <h3 class="card-title" style="margin-bottom:12px;">🎯 Target Role</h3>
+            <div class="role-grid">
+                <div class="role-card selected" data-role="Frontend Developer"><span class="r-emoji">⚛️</span><div class="r-name">Frontend</div><div class="r-dept">Dev</div></div>
+                <div class="role-card" data-role="Backend Developer"><span class="r-emoji">⚙️</span><div class="r-name">Backend</div><div class="r-dept">Dev</div></div>
+                <div class="role-card" data-role="Full Stack Developer"><span class="r-emoji">🔗</span><div class="r-name">Full Stack</div><div class="r-dept">Dev</div></div>
+                <div class="role-card" data-role="Data Scientist"><span class="r-emoji">📊</span><div class="r-name">Data Sci</div><div class="r-dept">Analytics</div></div>
+                <div class="role-card" data-role="ML Engineer"><span class="r-emoji">🤖</span><div class="r-name">ML Eng</div><div class="r-dept">AI/ML</div></div>
+                <div class="role-card" data-role="DevOps Engineer"><span class="r-emoji">🐳</span><div class="r-name">DevOps</div><div class="r-dept">Ops</div></div>
+                <div class="role-card" data-role="Product Manager"><span class="r-emoji">📋</span><div class="r-name">Product</div><div class="r-dept">PM</div></div>
+                <div class="role-card" data-role="UI/UX Designer"><span class="r-emoji">🎨</span><div class="r-name">UI/UX</div><div class="r-dept">Design</div></div>
+            </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="glass-card">
+            <h3 class="card-title" style="margin-bottom:8px;">🏆 Experience Level</h3>
+            <select class="form-select" id="expLevel">
+                <option>Entry Level (0-2 years)</option>
+                <option selected>Mid Level (2-5 years)</option>
+                <option>Senior Level (5-10 years)</option>
+                <option>Lead/Principal (10+ years)</option>
+            </select>
+        </div>
+
+        <!-- JD (optional) -->
+        <div class="glass-card">
+            <h3 class="card-title" style="margin-bottom:5px;">📝 Job Description <span style="font-size:12px;color:var(--text-muted);font-weight:400;">(optional)</span></h3>
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Paste JD for precise skill-matching</p>
+            <textarea class="jd-textarea" id="jdInput" placeholder="Paste the full job description here..."></textarea>
+        </div>
+
+        <button class="analyze-btn" id="analyzeBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Analyze with AI
+        </button>
+    </div>
+
+    <!-- RIGHT PANEL: Results -->
+    <div>
+        <!-- Empty state -->
+        <div id="emptyState" class="glass-card" style="text-align:center;padding:56px 36px;">
+            <div style="font-size:60px;margin-bottom:18px;">🔍</div>
+            <h3 style="font-size:20px;font-weight:600;margin-bottom:10px;">Ready to Analyze</h3>
+            <p style="color:var(--text-muted);font-size:14px;line-height:1.8;">Upload a resume, pick a role,<br>and let AI do the heavy lifting.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;text-align:left;">
+                <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:13px;"><div style="font-size:18px;margin-bottom:4px;">📈</div><div style="font-size:12px;font-weight:600;">ATS Score</div><div style="font-size:11px;color:var(--text-muted);">0-100 compatibility</div></div>
+                <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:13px;"><div style="font-size:18px;margin-bottom:4px;">🎯</div><div style="font-size:12px;font-weight:600;">Skill Gap</div><div style="font-size:11px;color:var(--text-muted);">Matched vs missing</div></div>
+                <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:13px;"><div style="font-size:18px;margin-bottom:4px;">🏢</div><div style="font-size:12px;font-weight:600;">Company Fit</div><div style="font-size:11px;color:var(--text-muted);">Eligible employers</div></div>
+                <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;padding:13px;"><div style="font-size:18px;margin-bottom:4px;">❓</div><div style="font-size:12px;font-weight:600;">Interview Prep</div><div style="font-size:11px;color:var(--text-muted);">AI-tailored questions</div></div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsPanel" style="display:none;">
+            <!-- Score Hero -->
+            <div class="glass-card" style="margin-bottom:18px;">
+                <div style="display:flex;align-items:center;justify-content:center;gap:32px;padding:20px;flex-wrap:wrap;">
+                    <div class="score-ring-wrap">
+                        <div style="position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;">
+                            <svg width="150" height="150" viewBox="0 0 150 150" style="position:absolute;top:0;left:0;transform:rotate(-90deg)">
+                                <circle cx="75" cy="75" r="62" fill="none" stroke="var(--glass-border)" stroke-width="11"/>
+                                <circle cx="75" cy="75" r="62" fill="none" stroke="var(--emerald)" stroke-width="11"
+                                    stroke-dasharray="390" stroke-dashoffset="390" id="scoreArc" stroke-linecap="round"/>
+                            </svg>
+                            <span id="scoreVal" style="font-family:'Space Mono';font-size:34px;font-weight:700;z-index:1;">0%</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">ATS Score</div>
+                        <div id="gradeTag" style="margin-top:6px;padding:3px 14px;border-radius:20px;font-size:12px;font-weight:600;"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-width:220px;">
+                        <div class="breakdown-item"><div class="breakdown-label">Skills</div><div class="breakdown-bar"><div class="breakdown-fill" id="bSkills" style="width:0%;background:var(--emerald);"></div></div><div class="breakdown-score" id="bSkillsV">0%</div></div>
+                        <div class="breakdown-item"><div class="breakdown-label">Experience</div><div class="breakdown-bar"><div class="breakdown-fill" id="bExp" style="width:0%;background:var(--gold);"></div></div><div class="breakdown-score" id="bExpV">0%</div></div>
+                        <div class="breakdown-item"><div class="breakdown-label">Keywords</div><div class="breakdown-bar"><div class="breakdown-fill" id="bKw" style="width:0%;background:var(--coral);"></div></div><div class="breakdown-score" id="bKwV">0%</div></div>
+                        <div class="breakdown-item"><div class="breakdown-label">Format</div><div class="breakdown-bar"><div class="breakdown-fill" id="bFmt" style="width:0%;background:#60a5fa;"></div></div><div class="breakdown-score" id="bFmtV">0%</div></div>
+                    </div>
+                </div>
+                <div style="padding:0 20px 18px;border-top:1px solid var(--glass-border);padding-top:15px;">
+                    <p id="aiSummary" style="font-size:14px;line-height:1.8;color:var(--text-secondary);"></p>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="glass-card" style="margin-bottom:18px;">
+                <h3 class="card-title" style="margin-bottom:14px;">🎯 Skill Analysis</h3>
+                <div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">✅ Matched</div><div id="matchedSkills"></div></div>
+                <div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">❌ Missing</div><div id="missingSkills"></div></div>
+                <div><div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;">⭐ Bonus</div><div id="bonusSkills"></div></div>
+            </div>
+
+            <!-- Companies -->
+            <div class="glass-card" style="margin-bottom:18px;">
+                <h3 class="card-title" style="margin-bottom:6px;">🏢 Eligible Companies</h3>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Based on your score & skills</p>
+                <div id="companyList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            </div>
+
+            <!-- Interview Questions -->
+            <div class="glass-card" style="margin-bottom:18px;">
+                <h3 class="card-title" style="margin-bottom:6px;">❓ Interview Prep</h3>
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">AI-generated questions for your profile</p>
+                <div id="interviewQs"></div>
+            </div>
+
+            <!-- Roadmap -->
+            <div class="glass-card">
+                <h3 class="card-title" style="margin-bottom:14px;">💡 Improvement Roadmap</h3>
+                <div id="roadmapList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Drop zone
+const dropZone=document.getElementById('dropZone'),resumeFile=document.getElementById('resumeFile');
+resumeFile.addEventListener('change',e=>{if(e.target.files[0])document.getElementById('fileName').textContent='✓ '+e.target.files[0].name;});
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');if(e.dataTransfer.files[0]){resumeFile.files=e.dataTransfer.files;document.getElementById('fileName').textContent='✓ '+e.dataTransfer.files[0].name;}});
+
+// Role selection
+let selectedRole='Frontend Developer';
+document.querySelectorAll('.role-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+        document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedRole=card.dataset.role;
+    });
+});
+
+// Analyze
+document.getElementById('analyzeBtn').addEventListener('click', async function(){
+    const file=resumeFile.files[0];
+    if(!file){toast('Please upload a resume file.','error');return;}
+    this.disabled=true;
+    this.innerHTML=`<div class="loading-dots"><span></span><span></span><span></span></div> AI is analyzing...`;
+
+    const fd=new FormData();
+    fd.append('resume',file);
+    fd.append('role',selectedRole);
+    fd.append('experience_level',document.getElementById('expLevel').value);
+    fd.append('job_description',document.getElementById('jdInput').value);
+
+    try {
+        const data=await api.postForm('/api/analyze',fd);
+        renderResult(data.candidate);
+        toast('Analysis complete!','success');
+    } catch(err){
+        toast('Analysis failed: '+err.message,'error');
+    }
+    this.disabled=false;
+    this.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Analyze with AI`;
+});
+
+function renderResult(c){
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('resultsPanel').style.display='block';
+
+    // Score arc
+    const arc=document.getElementById('scoreArc');
+    arc.style.stroke=c.score>=80?'#22c55e':c.score>=50?'#eab308':'#ef4444';
+    document.getElementById('scoreVal').textContent=c.score+'%';
+    setTimeout(()=>{arc.style.transition='stroke-dashoffset 1.2s ease';arc.style.strokeDashoffset=390-(c.score/100)*390;},100);
+
+    const gt=document.getElementById('gradeTag');
+    gt.textContent=c.grade;
+    gt.style.background=c.score>=80?'rgba(34,197,94,0.15)':c.score>=50?'rgba(234,179,8,0.15)':'rgba(239,68,68,0.15)';
+    gt.style.color=c.score>=80?'#22c55e':c.score>=50?'#eab308':'#ef4444';
+
+    // Breakdowns
+    [['bSkills','bSkillsV',c.skills_score],['bExp','bExpV',c.experience_score],['bKw','bKwV',c.keywords_score],['bFmt','bFmtV',c.format_score]].forEach(([b,v,val])=>{
+        setTimeout(()=>document.getElementById(b).style.width=Math.min(val,100)+'%',200);
+        document.getElementById(v).textContent=Math.min(val,100)+'%';
+    });
+
+    document.getElementById('aiSummary').textContent=c.summary||'';
+    document.getElementById('matchedSkills').innerHTML=(c.matched_skills||[]).map(s=>`<span class="skill-tag skill-matched">${s}</span>`).join('');
+    document.getElementById('missingSkills').innerHTML=(c.missing_skills||[]).map(s=>`<span class="skill-tag skill-missing">${s}</span>`).join('');
+    document.getElementById('bonusSkills').innerHTML=(c.bonus_skills||[]).map(s=>`<span class="skill-tag skill-bonus">${s}</span>`).join('')||`<span style="font-size:13px;color:var(--text-muted);">None detected</span>`;
+
+    const tierCls={'Tier 1':'rgba(52,211,153,0.12)','Tier 2':'rgba(212,165,116,0.12)','Tier 3':'rgba(71,85,105,0.2)'};
+    document.getElementById('companyList').innerHTML=(c.eligible_companies||[]).map(co=>{
+        const tier=co.tier||'';
+        return `<div style="display:flex;align-items:center;gap:8px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;padding:8px 13px;font-size:13px;">
+            🏢 <div><div style="font-weight:600;">${co.name}</div><div style="font-size:11px;color:var(--text-muted);">${co.reason||''}</div></div>
+            <span style="margin-left:auto;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(52,211,153,0.12);color:var(--emerald-light);">${tier}</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('interviewQs').innerHTML=(c.interview_questions||[]).slice(0,5).map((q,i)=>`
+        <div class="q-card"><div class="q-num">Q${i+1} · ${q.topic||'General'}</div>
+        <div style="font-size:14px;line-height:1.6;">${q.question}</div>
+        <span class="q-difficulty diff-${(q.difficulty||'Medium').toLowerCase()}">${q.difficulty||'Medium'}</span></div>`).join('');
+
+    const pc={'High':'#f87171','Medium':'#eab308','Low':'#22c55e'};
+    document.getElementById('roadmapList').innerHTML=(c.roadmap||[]).map(step=>`
+        <div style="display:flex;gap:12px;margin-bottom:12px;padding:13px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:11px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-size:12px;font-weight:700;flex-shrink:0;">${step.step}</div>
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+                    <span style="font-weight:600;font-size:13px;">${step.title}</span>
+                    <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,0.06);color:${pc[step.priority]||'#22c55e'};">${step.priority}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${step.description}</div>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('resultsPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+{% endblock %}
